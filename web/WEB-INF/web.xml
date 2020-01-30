@@ -5,13 +5,14 @@
          version="3.1">
 
     <servlet>
-        <servlet-name>MyServlet</servlet-name>
-        <servlet-class>MyServlet</servlet-class>
+        <servlet-name>SumServlet</servlet-name>
+        <servlet-class>SumServlet</servlet-class>
+        <async-supported>true</async-supported>
     </servlet>
 
     <servlet-mapping>
-        <servlet-name>MyServlet</servlet-name>
-        <url-pattern>/MyServlet</url-pattern>
+        <servlet-name>SumServlet</servlet-name>
+        <url-pattern>/SumServlet</url-pattern>
     </servlet-mapping>
 
 </web-app>
