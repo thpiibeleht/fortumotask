@@ -7,11 +7,6 @@ import org.mockito.MockitoAnnotations;
 import javax.servlet.*;
 import javax.servlet.http.*;
 import java.io.*;
-import java.security.Principal;
-import java.util.Collection;
-import java.util.Enumeration;
-import java.util.Locale;
-import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
@@ -46,6 +41,7 @@ public class SumServletTest extends Mockito {
     @Before
     public void setUp() throws Exception {
         MockitoAnnotations.initMocks(this);
+
         when(brEnd.readLine()).thenReturn("end");
         when(requestEnd.getReader()).thenReturn(brEnd);
 
@@ -58,8 +54,6 @@ public class SumServletTest extends Mockito {
         when(requestFive.startAsync(requestFive, response)).thenReturn(ac);
         when(requestEnd.startAsync(requestEnd, response)).thenReturn(ac);
         when(ac.getResponse()).thenReturn(response);
-
-
     }
 
     @Test
@@ -73,9 +67,8 @@ public class SumServletTest extends Mockito {
         sumServlet.doPost(requestFive, response);
         sumServlet.doPost(requestEnd, response);
 
-
         try {
-            Thread.sleep(500);
+            Thread.sleep(200);
             assertEquals("10", sw.toString().trim());
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -87,12 +80,11 @@ public class SumServletTest extends Mockito {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
         when(response.getWriter()).thenReturn(pw);
-        // SumServlet sumServlet = new SumServlet();
+
         sumServlet.doPost(requestFloat, response);
 
-
         try {
-            Thread.sleep(500);
+            Thread.sleep(200);
             assertEquals("Invalid request", sw.toString().trim());
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -106,14 +98,13 @@ public class SumServletTest extends Mockito {
         PrintWriter pw = new PrintWriter(sw);
         when(response.getWriter()).thenReturn(pw);
 
-        //SumServlet sumServlet = new SumServlet();
         for (int i = 0; i < 19; i++) {
             sumServlet.doPost(requestFive, response);
         }
         sumServlet.doPost(requestEnd, response);
 
         try {
-            Thread.sleep(500);
+            Thread.sleep(200);
             assertEquals("95", sw.toString().trim());
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -127,7 +118,6 @@ public class SumServletTest extends Mockito {
         PrintWriter pw = new PrintWriter(sw);
         when(response.getWriter()).thenReturn(pw);
 
-        //SumServlet sumServlet = new SumServlet();
         for (int i = 0; i < 24; i++) {
             sumServlet.doPost(requestFive, response);
         }
@@ -141,26 +131,23 @@ public class SumServletTest extends Mockito {
         PrintWriter pw = new PrintWriter(sw);
         when(response.getWriter()).thenReturn(pw);
 
-        //SumServlet sumServlet = new SumServlet();
-
         sumServlet.doPost(requestFive, response);
         sumServlet.doPost(requestEnd, response);
+
+        sw = new StringWriter();
+        PrintWriter pw2 = new PrintWriter(sw);
+        when(response.getWriter()).thenReturn(pw2);
 
         for (int i = 0; i < 5; i++) {
             sumServlet.doPost(requestFive, response);
         }
-        sw = new StringWriter();
-        PrintWriter pw2 = new PrintWriter(sw);
-        when(response.getWriter()).thenReturn(pw2);
         sumServlet.doPost(requestEnd, response);
 
-
         try {
-            Thread.sleep(500);
+            Thread.sleep(200);
             assertEquals("25", sw.toString().trim());
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
-
 }

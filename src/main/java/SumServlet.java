@@ -11,16 +11,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class SumServlet extends HttpServlet {
 
-
     // Code based on https://plumbr.io/blog/java/how-to-use-asynchronous-servlets-to-improve-performance
     private static final BlockingQueue<AsyncContext> queue = new ArrayBlockingQueue<>(20);
-    //private static ExecutorService executorService = Executors.newScheduledThreadPool(20);
     private static final AtomicLong sum = new AtomicLong(0);
 
     protected synchronized void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -33,18 +29,15 @@ public class SumServlet extends HttpServlet {
 
             if (requestContent.equals("end")) {
                 addToWaitingList(request.startAsync(request, response));
-                //executorService.execute(SumServlet::endEvent);
                 endEvent();
             }
-
             else if (requestContent.matches("^\\d{1,11}$")) {
                 sum.updateAndGet(v -> v + Long.parseLong(requestContent));
                 AsyncContext ac = request.startAsync(request, response);
-                // Request set to time out after 1000 seconds
-                ac.setTimeout(1000000);
+                // Request arbitrarily set to time out after 60 seconds
+                ac.setTimeout(60000);
                 addToWaitingList(ac);
             }
-
             else {
                 try (PrintWriter pw = response.getWriter()) {
                     pw.println("Invalid request");
@@ -64,7 +57,6 @@ public class SumServlet extends HttpServlet {
             ServletResponse response = ac.getResponse();
             try (PrintWriter pw = response.getWriter()) {
                 pw.print(sum.longValue());
-                System.out.println();
             } catch (IOException e) {
                 e.printStackTrace();
             }
