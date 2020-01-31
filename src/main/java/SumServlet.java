@@ -18,27 +18,28 @@ import java.util.concurrent.atomic.AtomicLong;
 public class SumServlet extends HttpServlet {
 
 
-    // Code heavily based on https://plumbr.io/blog/java/how-to-use-asynchronous-servlets-to-improve-performance
+    // Code based on https://plumbr.io/blog/java/how-to-use-asynchronous-servlets-to-improve-performance
     private static final BlockingQueue<AsyncContext> queue = new ArrayBlockingQueue<>(20);
-    private static ExecutorService executorService = Executors.newScheduledThreadPool(20);
+    //private static ExecutorService executorService = Executors.newScheduledThreadPool(20);
     private static final AtomicLong sum = new AtomicLong(0);
 
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    protected synchronized void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         handleRequest(request, response);
     }
 
-    private static void handleRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    private static synchronized void handleRequest(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try (BufferedReader br = request.getReader()) {
             String requestContent = br.readLine();
 
             if (requestContent.equals("end")) {
-                addToWaitingList(request.startAsync());
-                executorService.execute(SumServlet::endEvent);
+                addToWaitingList(request.startAsync(request, response));
+                //executorService.execute(SumServlet::endEvent);
+                endEvent();
             }
 
             else if (requestContent.matches("^\\d{1,11}$")) {
                 sum.updateAndGet(v -> v + Long.parseLong(requestContent));
-                AsyncContext ac = request.startAsync();
+                AsyncContext ac = request.startAsync(request, response);
                 // Request set to time out after 1000 seconds
                 ac.setTimeout(1000000);
                 addToWaitingList(ac);
@@ -52,17 +53,18 @@ public class SumServlet extends HttpServlet {
         }
     }
 
-    private static void addToWaitingList(AsyncContext c) {
-        queue.add(c);
+    private synchronized static void addToWaitingList(AsyncContext ac) {
+        queue.add(ac);
     }
 
-    private static void endEvent() {
+    private static synchronized void endEvent() {
         List<AsyncContext> clients = new ArrayList<>(queue.size());
         queue.drainTo(clients);
         clients.parallelStream().forEach((AsyncContext ac) -> {
             ServletResponse response = ac.getResponse();
             try (PrintWriter pw = response.getWriter()) {
-                pw.println(sum);
+                pw.print(sum.longValue());
+                System.out.println();
             } catch (IOException e) {
                 e.printStackTrace();
             }
